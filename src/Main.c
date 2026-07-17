@@ -15,9 +15,10 @@ typedef unsigned char WFC_Option;
 #define WFC_OPTION_GGRAYG			4U
 #define WFC_OPTION_GRAYGREEN		5U
 #define WFC_OPTION_GREENGRAY		6U
+#define WFC_OPTION_GRAYGREENGRAY	7U
 
 #define WFC_DIRECTIONS				4U
-#define WFC_TILE_COUNT				48U // 36U
+#define WFC_TILE_COUNT				36U // 48U
 #define WFC_TILE_INVALID			0xFFU
 #define WFC_TILE_ENTROPY_MAX		0xFFFFFFFFU
 
@@ -25,6 +26,7 @@ typedef unsigned char WFC_Option;
 #define WFC_TILE_Y	100
 
 WFC_Option WFC_ALLOWED[WFC_TILE_COUNT][WFC_DIRECTIONS] = {
+	/*
 	{ 1U,1U,1U,1U },
 	{ 1U,1U,7U,7U },
 	{ 1U,1U,7U,7U },
@@ -62,19 +64,18 @@ WFC_Option WFC_ALLOWED[WFC_TILE_COUNT][WFC_DIRECTIONS] = {
 	{ 4U,3U,2U,2U },
 	{ 4U,4U,2U,2U },
 	{ 4U,4U,3U,3U },
+	{ 5U,2U,5U,2U },
 	{ 5U,5U,1U,2U },
 	{ 5U,5U,1U,3U },
 	{ 5U,5U,7U,2U },
 	{ 6U,2U,2U,5U },
-	{ 6U,2U,5U,2U },
 	{ 6U,6U,2U,1U },
 	{ 6U,6U,2U,7U },
 	{ 6U,6U,3U,1U },
 	{ 7U,2U,5U,5U },
 	{ 7U,7U,1U,1U },
 	{ 7U,7U,1U,1U }
-
-	/*
+	*/
 	{ 1U,1U,1U,1U },
 	{ 1U,3U,5U,5U },
 	{ 2U,2U,2U,2U },
@@ -107,11 +108,11 @@ WFC_Option WFC_ALLOWED[WFC_TILE_COUNT][WFC_DIRECTIONS] = {
 	{ 4U,3U,2U,2U },
 	{ 4U,4U,2U,2U },
 	{ 4U,4U,3U,3U },
+	{ 5U,2U,5U,2U },
 	{ 5U,5U,1U,3U },
 	{ 6U,2U,2U,5U },
-	{ 6U,2U,5U,2U },
 	{ 6U,6U,3U,1U }
-	*/
+	
 };
 
 typedef struct WFC_Tile_Pair {
@@ -416,6 +417,7 @@ void Setup(AlxWindow* w){
 
 	sprites = Vector_New(sizeof(Sprite));
 	Vector_PushCount(&sprites, (Sprite[]){
+		/*
 		Sprite_Load("./assets/_1111.png"),
 		Sprite_Load("./assets/_1177_0.png"),
 		Sprite_Load("./assets/_1177.png"),
@@ -464,8 +466,7 @@ void Setup(AlxWindow* w){
 		Sprite_Load("./assets/_7255.png"),
 		Sprite_Load("./assets/_7711_0.png"),
 		Sprite_Load("./assets/_7711.png")
-
-		/*
+		*/
 		Sprite_Load("./assets/_1111.png"),
 		Sprite_Load("./assets/_1355.png"),
 		Sprite_Load("./assets/_2222.png"),
@@ -498,11 +499,10 @@ void Setup(AlxWindow* w){
 		Sprite_Load("./assets/_4322.png"),
 		Sprite_Load("./assets/_4422.png"),
 		Sprite_Load("./assets/_4433.png"),
+		Sprite_Load("./assets/_5252.png"),
 		Sprite_Load("./assets/_5513.png"),
 		Sprite_Load("./assets/_6225.png"),
-		Sprite_Load("./assets/_6252.png"),
 		Sprite_Load("./assets/_6631.png")
-		*/
 	}, WFC_TILE_COUNT);
 
 	map = (WFC_Tile_Id*)malloc(sizeof(WFC_Tile_Id) * WFC_TILE_X * WFC_TILE_Y);
