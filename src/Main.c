@@ -22,8 +22,8 @@ typedef unsigned char WFC_Option;
 #define WFC_TILE_INVALID			0xFFU
 #define WFC_TILE_ENTROPY_MAX		0xFFFFFFFFU
 
-#define WFC_TILE_X	100
-#define WFC_TILE_Y	100
+#define WFC_TILE_X	400
+#define WFC_TILE_Y	400
 
 WFC_Option WFC_ALLOWED[WFC_TILE_COUNT][WFC_DIRECTIONS] = {
 	/*
