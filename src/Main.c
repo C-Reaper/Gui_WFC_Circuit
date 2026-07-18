@@ -112,7 +112,6 @@ WFC_Option WFC_ALLOWED[WFC_TILE_COUNT][WFC_DIRECTIONS] = {
 	{ 5U,5U,1U,3U },
 	{ 6U,2U,2U,5U },
 	{ 6U,6U,3U,1U }
-	
 };
 
 typedef struct WFC_Tile_Pair {
@@ -193,7 +192,7 @@ void WFC_Init() {
 	}
 	Vector_Clear(&backtrack_stack);
 }
-void WFC_Propagate(Vic2 start) {
+char WFC_Propagate(Vic2 start) {
 	Vector queue = Vector_New(sizeof(unsigned int));
 	unsigned int sidx = (unsigned int)(start.y * WFC_TILE_X + start.x);
 	Vector_Push(&queue, &sidx);
@@ -212,7 +211,13 @@ void WFC_Propagate(Vic2 start) {
 			if (npos.x < 0 || npos.y < 0 || npos.x >= WFC_TILE_X || npos.y >= WFC_TILE_Y) continue;
 
 			unsigned int nidx = (unsigned int)(npos.y * WFC_TILE_X + npos.x);
-			if (grid[nidx].collapsed != WFC_TILE_INVALID) continue;
+			if (grid[nidx].collapsed != WFC_TILE_INVALID) {
+				if (!WFC_Tile_Compatible(fixed, d, grid[nidx].collapsed)) {
+					Vector_Free(&queue);
+					return 0; /* contradiction */
+				}
+				continue;
+			}
 
 			char changed = 0;
 			for (WFC_Tile_Id t = 0; t < WFC_TILE_COUNT; t++) {
@@ -227,12 +232,13 @@ void WFC_Propagate(Vic2 start) {
 
 				if (grid[nidx].entropy == 0) {
 					Vector_Free(&queue);
-					return; /* contradiction */
+					return 0; /* contradiction */
 				}
 			}
 		}
 	}
 	Vector_Free(&queue);
+	return 1;
 }
 char WFC_Tile_BT_Push(Vic2 pos, WFC_Tile_Id chosen) {
 	WFC_Tile_BT bt = WFC_Tile_BT_New(pos);
@@ -257,7 +263,7 @@ Vic2 WFC_FindMinEntropy() {
 	unsigned int min_e = WFC_TILE_ENTROPY_MAX;
 	unsigned int candidates[64];
 	unsigned int cand_count = 0;
-
+	
 	for (unsigned int y = 0; y < WFC_TILE_Y; y++) {
 		for (unsigned int x = 0; x < WFC_TILE_X; x++) {
 			unsigned int idx = y * WFC_TILE_X + x;
@@ -294,8 +300,10 @@ void WFC_SeedRandomStart() {
 		WFC_Tile_Id choice = cands[Random_u64_MinMax(0U, cnt-1U)];
 		grid[idx].collapsed = choice;
 		map[idx] = choice;
+		
 		for (WFC_Tile_Id t = 0; t < WFC_TILE_COUNT; t++)
 			grid[idx].possible[t] = (t == choice);
+		
 		grid[idx].entropy = 1U;
 
 		WFC_Tile_BT_Push(seed, choice);
@@ -323,8 +331,8 @@ WFC_Tile_Id WFC_Collapse(Vic2 pos) {
 	map[idx] = choice;
 	for (WFC_Tile_Id t = 0; t < WFC_TILE_COUNT; t++)
 		grid[idx].possible[t] = (t == choice ? 1U : 0U);
+	
 	grid[idx].entropy = 1U;
-
 	return choice;
 }
 void WFC_DebugStats() {
@@ -353,13 +361,19 @@ char WFC_Solve() {
 		}
 
 		WFC_Tile_Id chosen = WFC_Collapse(cell);
+
 		if (chosen == WFC_TILE_INVALID) {
-			Vic2 p; WFC_Tile_Id ch;
+			Vic2 p;
+			WFC_Tile_Id ch;
+
 			if (WFC_Tile_BT_Pop(&p, &ch)) {
 				unsigned int idx = (unsigned int)(p.y * WFC_TILE_X + p.x);
 				grid[idx].collapsed = WFC_TILE_INVALID;
 				map[idx] = WFC_TILE_INVALID;
-				for (unsigned int t = 0; t < WFC_TILE_COUNT; t++) grid[idx].possible[t] = 1U;
+				
+				for (unsigned int t = 0; t < WFC_TILE_COUNT; t++)
+					grid[idx].possible[t] = 1U;
+				
 				WFC_UpdateEntropy(idx);
 			} else {
 				printf("[WFC]: Unsolvable.\n");
@@ -370,9 +384,8 @@ char WFC_Solve() {
 		}
 
 		WFC_Tile_BT_Push(cell, chosen);
-		WFC_Propagate(cell);
+		char contradiction = !WFC_Propagate(cell);
 
-		char contradiction = 0;
 		for (unsigned int i = 0; i < (unsigned int)(WFC_TILE_X * WFC_TILE_Y); i++) {
 			if (grid[i].entropy == 0 && grid[i].collapsed == WFC_TILE_INVALID) {
 				contradiction = 1;
@@ -381,12 +394,17 @@ char WFC_Solve() {
 		}
 
 		if (contradiction) {
-			Vic2 p; WFC_Tile_Id ch;
+			Vic2 p;
+			WFC_Tile_Id ch;
 			WFC_Tile_BT_Pop(&p, &ch);
+
 			unsigned int idx = (unsigned int)(p.y * WFC_TILE_X + p.x);
 			grid[idx].collapsed = WFC_TILE_INVALID;
 			map[idx] = WFC_TILE_INVALID;
-			for (unsigned int t = 0; t < WFC_TILE_COUNT; t++) grid[idx].possible[t] = 1U;
+
+			for (unsigned int t = 0; t < WFC_TILE_COUNT; t++)
+				grid[idx].possible[t] = 1U;
+
 			WFC_UpdateEntropy(idx);
 		}
 		iterations++;
